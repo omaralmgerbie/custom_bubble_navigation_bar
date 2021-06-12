@@ -44,18 +44,23 @@ class CustomNavigationBar extends StatefulWidget {
       this.bubbleCurve = Curves.linear,
       this.scaleCurve = Curves.linear,
       this.isFloating = false,
+      this.usingFab = false,
       this.blurEffect = false,
       this.opacity = 0.8})
       : assert(items != null),
         assert(scaleFactor <= 0.5, 'Scale factor must smaller than 0.5'),
         assert(scaleFactor > 0, 'Scale factor must bigger than 0'),
-        assert(0 <= currentIndex && currentIndex < items.length),
+        assert(0 <= currentIndex && (currentIndex < items.length || usingFab)),
         super(key: key);
 
   ///
   /// scale factor for the icon scale animation effect.
   /// default is `0.2`.
   final double scaleFactor;
+
+  ///
+  /// to add FloatingActionButton to your NavigationBar Default is [false]
+  final bool usingFab;
 
   ///
   /// boolean that control if navigation bar perform floating.
@@ -178,7 +183,7 @@ class _CustomNavigationBarState extends State<CustomNavigationBar>
   @override
   void didUpdateWidget(CustomNavigationBar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.currentIndex != oldWidget.currentIndex) {
+    if (widget.currentIndex != oldWidget.currentIndex && !widget.usingFab) {
       _startAnimation(widget.currentIndex);
       _startScale(widget.currentIndex);
     }
@@ -308,7 +313,7 @@ class _CustomNavigationBarState extends State<CustomNavigationBar>
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
-                    widget.onTap!(i);
+                    if (widget.currentIndex != i) widget.onTap!(i);
                   },
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
