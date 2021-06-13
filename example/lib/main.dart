@@ -30,7 +30,8 @@ enum ThemeStyle {
   FloatingBar,
   NotificationBadge,
   WithTitle,
-  BlurEffect
+  BlurEffect,
+  WithFab,
 }
 
 class MyApp extends StatelessWidget {
@@ -184,6 +185,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
               ),
             ),
+            ListTile(
+              title: const Text('With Floating Action Button'),
+              leading: Radio(
+                value: ThemeStyle.WithFab,
+                groupValue: _currentStyle,
+                onChanged: (ThemeStyle value) {
+                  setState(() {
+                    _currentStyle = value;
+                  });
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -211,6 +224,8 @@ class _MyHomePageState extends State<MyHomePage> {
         return _buildTitle();
       case ThemeStyle.BlurEffect:
         return _buildBlurEffect();
+      case ThemeStyle.WithFab:
+        return _buildWithFab();
       default:
         return _buildOriginDesign();
     }
@@ -528,6 +543,51 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       },
       isFloating: true,
+    );
+  }
+
+  Widget _buildWithFab() {
+    return CustomNavigationBar(
+      iconSize: 30.0,
+      selectedColor: Colors.white,
+      strokeColor: Colors.white,
+      unSelectedColor: Colors.grey[600],
+      backgroundColor: Colors.black,
+      borderRadius: Radius.circular(20.0),
+      usingFab: true,
+      items: [
+        CustomNavigationBarItem(
+          icon: Icon(
+            AntDesign.getIconData('home'),
+          ),
+        ),
+        CustomNavigationBarItem(
+          icon: Icon(
+            AntDesign.getIconData('shoppingcart'),
+          ),
+        ),
+        CustomNavigationBarItem(
+          icon: Icon(
+            AntDesign.getIconData("cloudo"),
+          ),
+        ),
+        CustomNavigationBarItem(
+          icon: Icon(
+            AntDesign.getIconData('search1'),
+          ),
+        ),
+        CustomNavigationBarItem(
+          icon: Icon(
+            AntDesign.getIconData("user"),
+          ),
+        ),
+      ],
+      currentIndex: _currentIndex,
+      onTap: (index) {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
     );
   }
 

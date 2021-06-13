@@ -33,6 +33,8 @@ class CustomNavigationBar extends StatefulWidget {
       required this.items,
       this.selectedColor,
       this.unSelectedColor,
+      this.selectedFabColor,
+      this.unSelectedFabColor,
       this.onTap,
       this.currentIndex = 0,
       this.iconSize = 24.0,
@@ -50,7 +52,8 @@ class CustomNavigationBar extends StatefulWidget {
       : assert(items != null),
         assert(scaleFactor <= 0.5, 'Scale factor must smaller than 0.5'),
         assert(scaleFactor > 0, 'Scale factor must bigger than 0'),
-        assert(0 <= currentIndex && (currentIndex < items.length || usingFab)),
+        assert(0 <= currentIndex && currentIndex < items.length),
+        assert(items.length % 2 != 0 && usingFab),
         super(key: key);
 
   ///
@@ -94,6 +97,18 @@ class CustomNavigationBar extends StatefulWidget {
   ///
   /// default color is [grey[600]].
   final Color? unSelectedColor;
+
+  ///
+  /// [Color] when [CustomNavigationBarItem] is selected.
+  ///
+  /// default color is [blueAccent].
+  final Color? selectedFabColor;
+
+  ///
+  /// [Color] when [CustomNavigationBarItem] is not selected.
+  ///
+  /// default color is [grey[600]].
+  final Color? unSelectedFabColor;
 
   ///
   /// callback function when item tapped
@@ -183,11 +198,19 @@ class _CustomNavigationBarState extends State<CustomNavigationBar>
   @override
   void didUpdateWidget(CustomNavigationBar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.currentIndex != oldWidget.currentIndex && !widget.usingFab) {
+    if (widget.currentIndex != oldWidget.currentIndex) {
       _startAnimation(widget.currentIndex);
+
       _startScale(widget.currentIndex);
     }
   }
+
+  // _setColor() {
+  //   selectedFbC = widget.currentIndex == widget.items.length % 2 + 1
+  //       ? widget.selectedFabColor
+  //       : widget.unSelectedFabColor;
+
+  // }
 
   void _startAnimation(int index) {
     _controller = AnimationController(
@@ -267,10 +290,15 @@ class _CustomNavigationBarState extends State<CustomNavigationBar>
           scale: _sizes[index],
           selected: index == widget.currentIndex,
           item: widget.items[index],
-          selectedColor: widget.selectedColor ??
-              DefaultCustomNavigationBarStyle.defaultColor,
-          unSelectedColor: widget.unSelectedColor ??
-              DefaultCustomNavigationBarStyle.defaultUnselectedColor,
+          selectedColor: widget.usingFab && widget.items.length % 2 + 1 == index
+              ? Colors.white
+              : widget.selectedColor ??
+                  DefaultCustomNavigationBarStyle.defaultColor,
+          unSelectedColor:
+              widget.usingFab && widget.items.length % 2 + 1 == index
+                  ? Colors.white
+                  : widget.unSelectedColor ??
+                      DefaultCustomNavigationBarStyle.defaultUnselectedColor,
           iconPadding: _itemPadding,
         ),
       ),
@@ -296,37 +324,77 @@ class _CustomNavigationBarState extends State<CustomNavigationBar>
           (widget.items.length * 2);
     }
 
-    Widget bar = Material(
-      color: widget.backgroundColor,
-      elevation: widget.elevation,
-      borderRadius: BorderRadius.all(
-        widget.borderRadius,
-      ),
-      child: Container(
-        height: height,
-        width: MediaQuery.of(context).size.width,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            for (var i = 0; i < widget.items.length; i++)
-              Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    if (widget.currentIndex != i) widget.onTap!(i);
-                  },
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      _buildIcon(i),
-                      _buildLabel(i),
-                    ],
-                  ),
+    Widget bar = SizedBox(
+      width: MediaQuery.of(context).size.width,
+      height: widget.usingFab ? height + (height * .25) : height,
+      child: Stack(
+        children: [
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Material(
+              color: widget.backgroundColor,
+              elevation: widget.elevation,
+              borderRadius: BorderRadius.all(
+                widget.borderRadius,
+              ),
+              child: Container(
+                height: height,
+                width: MediaQuery.of(context).size.width,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    for (var i = 0; i < widget.items.length; i++)
+                      Expanded(
+                        child: widget.usingFab &&
+                                widget.items.length % 2 + 1 == i
+                            ? Container()
+                            : GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () {
+                                  if (widget.currentIndex != i)
+                                    widget.onTap!(i);
+                                },
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    _buildIcon(i),
+                                    _buildLabel(i),
+                                  ],
+                                ),
+                              ),
+                      ),
+                  ],
                 ),
               ),
-          ],
-        ),
+            ),
+          ),
+          if (widget.items.length % 2 != 0 && widget.usingFab)
+            Align(
+                alignment: Alignment.topCenter,
+                child: ElevatedButton(
+                    style: ButtonStyle(
+                        elevation: MaterialStateProperty.all(1),
+                        padding: MaterialStateProperty.all(EdgeInsets.all(15)),
+                        shape: MaterialStateProperty.all(CircleBorder()),
+                        backgroundColor:
+                            MaterialStateProperty.resolveWith<Color>(
+                          (Set<MaterialState> states) {
+                            if (states.contains(MaterialState.disabled))
+                              return widget.selectedFabColor ?? Colors.white;
+                            return widget.unSelectedFabColor ?? Colors.white;
+                          },
+                        )),
+                    onPressed:
+                        widget.currentIndex == widget.items.length % 2 + 1
+                            ? null
+                            : () {
+                                if (widget.currentIndex !=
+                                    widget.items.length % 2 + 1)
+                                  widget.onTap!(widget.items.length % 2 + 1);
+                              },
+                    child: _buildIcon(widget.items.length % 2 + 1))),
+        ],
       ),
     );
 
