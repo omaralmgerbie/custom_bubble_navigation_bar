@@ -345,6 +345,7 @@ class _CustomNavigationBarState extends State<CustomNavigationBar>
                   children: <Widget>[
                     for (var i = 0; i < widget.items.length; i++)
                       Expanded(
+                        flex: widget.items.length % 2 + 1 == i ? 1 : 2,
                         child: widget.usingFab &&
                                 widget.items.length % 2 + 1 == i
                             ? Container()
